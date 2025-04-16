@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ClerkProvider, SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { dark } from '@clerk/themes';
 import './globals.css';
 
 const geistSans = Geist({
@@ -26,14 +27,17 @@ export default function RootLayout({
     return (
         <ClerkProvider>
             <html lang="en">
-                <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                    <header className="flex justify-end items-center p-4 gap-4 h-16">
+                <body
+                    className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                    suppressHydrationWarning
+                >
+                    <header className="absolute w-full flex justify-end items-center p-4 gap-4 h-16">
                         <SignedOut>
                             <SignInButton />
                             <SignUpButton />
                         </SignedOut>
                         <SignedIn>
-                            <UserButton />
+                            <UserButton appearance={{ baseTheme: dark }} />
                         </SignedIn>
                     </header>
                     {children}
