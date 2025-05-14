@@ -11,7 +11,7 @@ export default function StatCard({
 }: Readonly<{
     className?: string;
     title?: React.ReactNode;
-    amount: string;
+    amount: string | number;
     change: number;
     isInvertPositive?: boolean;
 }>) {
