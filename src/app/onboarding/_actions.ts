@@ -1,9 +1,10 @@
 'use server';
 
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { randomUUID } from 'crypto';
 
 async function fetchNordigenToken() {
-    return process.env.NORDIGEN_ACCESS_TOKEN;
+    // return process.env.NORDIGEN_ACCESS_TOKEN;
     try {
         const tokenResponse = await fetch('https://bankaccountdata.gocardless.com/api/v2/token/new/', {
             method: 'POST',
@@ -44,6 +45,8 @@ export async function fetchBankingProviders() {
         );
 
         if (!response.ok) {
+            const data = await response.json();
+            console.log(data);
             throw new Error('Failed to fetch banking providers');
         }
 
@@ -92,7 +95,7 @@ export async function buildRequisitionLink(institutionId: String) {
         const client = await clerkClient();
 
         try {
-            await client.users.updateUser(userId, {
+            await client.users.updateUserMetadata(userId, {
                 privateMetadata: {
                     requisitionId: requisitionData.id,
                 },
@@ -145,13 +148,13 @@ export async function finalizeSetup() {
         }
 
         try {
-            await client.users.updateUser(userId, {
+            await client.users.updateUserMetadata(userId, {
                 publicMetadata: {
                     onboardingComplete: true,
                 },
                 privateMetadata: {
-                    requisitionId: requisitionData.id,
-                    accounts: requisitionData.accounts,
+                    requisitionId: null,
+                    accounts: [...((user.privateMetadata.accounts as []) ?? []), ...requisitionData.accounts],
                 },
             });
         } catch (err) {

@@ -14,6 +14,8 @@ declare global {
         internalTransactionId: Key;
         remittanceInformationUnstructured: string;
         transactionAmount: { amount: number; currency: string };
+        creditorName?: string;
+        debtorName?: string;
     }
 
     export interface IMonthlyReport {
@@ -21,5 +23,9 @@ declare global {
         month: number;
         account: string;
         transactions: ITransaction[];
+    }
+
+    interface IGroupedTransactions {
+        [valueDate: string]: { income: number; spending: number; day: number };
     }
 }

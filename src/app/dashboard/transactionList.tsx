@@ -95,14 +95,14 @@ export function TransactionList({ transactions }: { transactions: ITransaction[]
             </div>
             <div
                 className={classNames(
-                    'overflow-y-auto flex-grow grid col-span-full grid-cols-subgrid overflow-clip transition-all duration-500',
+                    'overflow-y-auto flex-grow grid col-span-full grid-cols-subgrid overflow-clip transition-all duration-500 content-start',
                     transactions.length ? 'h-[526px]' : 'h-0'
                 )}
             >
                 {sortedTransactions.map((transaction) => (
                     <div
                         key={transaction.transactionId}
-                        className="grid grid-cols-subgrid p-3 border-b border-white/20 col-span-full"
+                        className="grid grid-cols-subgrid p-3 border-b border-white/20 col-span-full h-[48px]"
                     >
                         <div className="font-medium flex items-center">
                             {transaction.transactionAmount.amount > 0 ? (
@@ -113,7 +113,9 @@ export function TransactionList({ transactions }: { transactions: ITransaction[]
                             {Math.abs(transaction.transactionAmount.amount)}{' '}
                             {transaction.transactionAmount.currency}
                         </div>
-                        <div className="truncate">{transaction.remittanceInformationUnstructured}</div>
+                        <div className="truncate">
+                            {transaction.remittanceInformationUnstructured?.toString()}
+                        </div>
                         <div className="hidden md:block">{transaction.valueDate}</div>
                         <div className="hidden md:block">{transaction.bookingDate}</div>
                     </div>

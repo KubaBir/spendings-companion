@@ -16,7 +16,7 @@ export default function StatCard({
     isInvertPositive?: boolean;
 }>) {
     return (
-        <Card title={title} className="h-[200px] col-span-2">
+        <Card title={title} className=" col-span-2">
             <div className="text-2xl font-semibold">{amount}</div>
             <div
                 className={classNames(

@@ -6,6 +6,7 @@ import { findMonthlyReport, updateMonthlyReport } from '@/models/monthlyReport';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 
 function getMonthStartAndEndDates(month: number, year: number) {
+    const today = new Date();
     if (month < 1 || month > 12) {
         throw new Error('Month must be between 1 and 12');
     }
@@ -16,7 +17,8 @@ function getMonthStartAndEndDates(month: number, year: number) {
 
     const startDate = new Date(year, month - 1, 1);
 
-    const endDate = new Date(year, month, 0);
+    let endDate = new Date(year, month, 0);
+    if (endDate > today) endDate = today;
 
     // Format dates as YYYY-MM-DD
     const formatDate = (date: Date) => {
@@ -33,7 +35,11 @@ function getMonthStartAndEndDates(month: number, year: number) {
     };
 }
 
-export async function getTransactions(month: number, year: number): Promise<ITransaction[]> {
+export async function getTransactions(
+    month: number,
+    year: number,
+    accountIndex: number = 0
+): Promise<ITransaction[]> {
     let transactions;
 
     const { userId } = await auth();
@@ -52,7 +58,7 @@ export async function getTransactions(month: number, year: number): Promise<ITra
     await dbConnect();
 
     // TODO let the user choose account to update
-    const account = accounts[0] as string;
+    const account = accounts[accountIndex] as string;
     const monthlyReport = await findMonthlyReport({ year, month, account });
     if (monthlyReport) {
         transactions = monthlyReport.transactions;
@@ -64,7 +70,8 @@ export async function getTransactions(month: number, year: number): Promise<ITra
     transactions = transactions.map((transaction) => ({
         ...transaction,
         transactionAmount: {
-            amount: Math.floor(Math.random() * (40 + 150 + 1)) - 150,
+            // amount: Math.floor(Math.random() * (40 + 150 + 1)) - 150,
+            amount: Number(transaction.transactionAmount.amount),
             currency: transaction.transactionAmount.currency,
         },
     }));
@@ -103,6 +110,8 @@ async function fetchTransactions({
     }
 
     const transactionData = await transactionsResponse.json();
+
+    console.log(transactionData.transactions.booked[0]);
 
     return transactionData.transactions.booked;
 }

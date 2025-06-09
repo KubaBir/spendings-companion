@@ -3,6 +3,9 @@ import { ClerkProvider, SignInButton, SignUpButton, SignedIn, SignedOut, UserBut
 import { Geist, Geist_Mono } from 'next/font/google';
 import { dark } from '@clerk/themes';
 import './globals.css';
+import { DotIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -31,13 +34,16 @@ export default function RootLayout({
                     className={`${geistSans.variable} ${geistMono.variable} antialiased`}
                     suppressHydrationWarning
                 >
-                    <header className="absolute w-full flex justify-end items-center p-4 gap-4 h-16">
+                    <header className="w-full flex justify-end items-center p-4 gap-4 h-16">
                         <SignedOut>
                             <SignInButton />
                             <SignUpButton />
                         </SignedOut>
                         <SignedIn>
-                            <UserButton appearance={{ baseTheme: dark }} />
+                            <Button asChild>
+                                <Link href="/onboarding">Add account</Link>
+                            </Button>
+                            <UserButton appearance={{ baseTheme: dark }}></UserButton>
                         </SignedIn>
                     </header>
                     {children}

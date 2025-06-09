@@ -16,6 +16,8 @@ const MonthlyReportSchema = new mongoose.Schema({
             internalTransactionId: String,
             remittanceInformationUnstructured: String,
             transactionAmount: { amount: Number, currency: String },
+            creditorName: String,
+            debtorName: String,
         },
     ],
 });
@@ -42,6 +44,8 @@ export async function findMonthlyReport({
     const data = await MonthlyReport.findOne({ year, month, account })
         .select({ 'transactions.internalTransactionId': 0, 'transactions._id': 0, _id: 0 })
         .lean();
+
+    console.log(data);
 
     return data;
 }
