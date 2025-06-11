@@ -3,11 +3,15 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CircularProgress } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { getTransactions } from './_actions';
+import { getAccounts, getTransactions } from './_actions';
 import Card from './card';
 import { Chart } from './chart';
 import StatCard from './statCard';
 import { TransactionList } from './transactionList';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const months = [
     { value: '0', label: 'January' },
@@ -29,55 +33,113 @@ const years = ['2024', '2025', '2026'];
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth();
 
+function calculateChange(oldValue: number, newValue: number) {
+    if (oldValue === 0 || newValue === 0) {
+        return 0;
+    }
+
+    const percentageChange = (newValue - oldValue) / oldValue;
+
+    return Math.round(percentageChange * 100) / 100;
+}
+
+export function getPreviousMonth(year: number, month: number) {
+    const date = new Date(year, month, 1);
+
+    date.setMonth(date.getMonth() - 1);
+
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth(),
+    };
+}
+
 export default function Dashboard() {
     const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-    const [selectedAccount, setSelectedAccount] = useState<number>(0);
+    const [selectedAccount, setSelectedAccount] = useState<string>('all');
     const [transactions, setTransactions] = useState<{ isLoading: boolean; data: ITransaction[] }>({
         isLoading: true,
         data: [],
     });
+    const [prevMonthTransactions, setPrevMonthTransactions] = useState<{
+        isLoading: boolean;
+        data: ITransaction[];
+    }>({
+        isLoading: true,
+        data: [],
+    });
+
+    const [accounts, setAccounts] = useState<{ id: number; logo: string }[]>([]);
+    useEffect(() => {
+        const fetch = async () => {
+            const accounts = await getAccounts();
+            setAccounts(accounts);
+        };
+        fetch();
+    }, []);
+
+    const getTransactionData = async (isForced: boolean = false) => {
+        try {
+            setTransactions({ isLoading: true, data: [] });
+            const prevDate = getPreviousMonth(selectedYear, selectedMonth);
+
+            const prevMonthPromise = getTransactions(
+                prevDate.month + 1,
+                prevDate.year,
+                selectedAccount === 'all' ? undefined : Number(selectedAccount),
+                false
+            );
+            const transactions = await getTransactions(
+                selectedMonth + 1,
+                selectedYear,
+                selectedAccount === 'all' ? undefined : Number(selectedAccount),
+                isForced
+            );
+            setTransactions({ isLoading: false, data: transactions });
+
+            const prevTransactions = await prevMonthPromise;
+            setPrevMonthTransactions({ isLoading: false, data: prevTransactions });
+        } catch (err) {
+            console.log(err);
+            setTransactions({ isLoading: false, data: [] });
+        }
+    };
 
     useEffect(() => {
-        const getTransactionData = async () => {
-            try {
-                setTransactions({ isLoading: true, data: [] });
-                const transactions = await getTransactions(selectedMonth + 1, selectedYear, selectedAccount);
-
-                setTransactions({ isLoading: false, data: transactions });
-            } catch (err) {
-                console.log(err);
-                setTransactions({ isLoading: false, data: [] });
-            }
-        };
-
-        if (selectedMonth) getTransactionData();
+        getTransactionData();
     }, [selectedMonth, selectedYear, selectedAccount]);
 
-    const earned = useMemo(
-        () =>
-            transactions.data
+    const stats = useMemo(
+        () => ({
+            earned: transactions.data
                 .filter((t) => t.transactionAmount.amount > 0)
-                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0)
-                .toFixed(2),
-        [transactions.data]
-    );
-
-    const spent = useMemo(
-        () =>
-            transactions.data
+                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0),
+            spent: transactions.data
                 .filter((t) => t.transactionAmount.amount < 0)
-                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0)
-                .toFixed(2),
+                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0),
+            total: transactions.data.reduce(
+                (sum, transaction) => sum + Number(transaction.transactionAmount.amount),
+                0
+            ),
+        }),
         [transactions.data]
     );
 
-    const total = useMemo(
-        () =>
-            transactions.data
-                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0)
-                .toFixed(2),
-        [transactions.data]
+    const prevMonthStats = useMemo(
+        () => ({
+            earned: prevMonthTransactions.data
+                .filter((t) => t.transactionAmount.amount > 0)
+                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0),
+            spent: prevMonthTransactions.data
+                .filter((t) => t.transactionAmount.amount < 0)
+                .reduce((sum, transaction) => sum + Number(transaction.transactionAmount.amount), 0),
+            total: prevMonthTransactions.data.reduce(
+                (sum, transaction) => sum + Number(transaction.transactionAmount.amount),
+                0
+            ),
+        }),
+        [prevMonthTransactions.data]
     );
 
     return (
@@ -85,13 +147,20 @@ export default function Dashboard() {
             <div className="max-w-[80em] mx-auto h-full flex flex-col">
                 <div className="md:flex gap-6 space-y-4 md:space-y-0 mb-14 items-center">
                     <h1 className="text-4xl font-extralight">Dashboard</h1>
-                    <Select onValueChange={(val) => setSelectedAccount(Number(val))} defaultValue="0">
+                    <Select onValueChange={(val) => setSelectedAccount(val)} defaultValue={selectedAccount}>
                         <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder="Select account" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="0">Account 1</SelectItem>
-                            <SelectItem value="1">Account 2</SelectItem>
+                            <SelectItem value="all">All Accounts</SelectItem>
+                            {accounts.map((a) => (
+                                <SelectItem key={a.id} value={String(a.id)}>
+                                    <div className="flex items-center justify-between w-[150px]">
+                                        Account {a.id + 1}
+                                        <img src={a.logo} about="bank logo" className="size-4" />
+                                    </div>
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     <div className="hidden sm:block border-r h-6 -mx-2 opacity-50"></div>
@@ -136,6 +205,26 @@ export default function Dashboard() {
                             ))}
                         </SelectContent>
                     </Select>
+
+                    {selectedAccount !== 'all' && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className={cn(
+                                        'bg-primary p-1 rounded-md hover:saturate-[150%] shadow-md cursor-pointer',
+                                        transactions.isLoading ||
+                                            (prevMonthTransactions.isLoading && 'pointer-events-none')
+                                    )}
+                                    onClick={() => getTransactionData(true)}
+                                >
+                                    <RefreshCw size={18} />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Fetch transactions</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-4 lg:grid-cols-10 gap-6 flex-1 h-full grid-rows-[auto_auto_1fr]">
@@ -144,27 +233,35 @@ export default function Dashboard() {
                         <StatCard
                             className="aspect-square col-span-2"
                             title={'Earned'}
-                            amount={earned + ' PLN'}
-                            change={0.0523}
+                            amount={stats.earned.toFixed(2) + ' PLN'}
+                            change={calculateChange(prevMonthStats.earned, stats.earned)}
+                            isLoading={transactions.isLoading || prevMonthTransactions.isLoading}
                         />
                         <StatCard
                             className="aspect-square col-span-2"
                             title={'Spent'}
-                            amount={spent + ' PLN'}
-                            change={0.0523}
+                            amount={stats.spent.toFixed(2) + ' PLN'}
+                            change={calculateChange(prevMonthStats.spent, stats.spent)}
+                            isLoading={transactions.isLoading || prevMonthTransactions.isLoading}
                             isInvertPositive
                         />
                         <StatCard
                             className="aspect-square col-span-2"
                             title={'Transactions'}
                             amount={transactions.data.length}
-                            change={0.2023}
+                            change={calculateChange(
+                                prevMonthTransactions.data.length,
+                                transactions.data.length
+                            )}
+                            isLoading={transactions.isLoading || prevMonthTransactions.isLoading}
+                            isInvertPositive
                         />
                         <StatCard
                             className="aspect-square col-span-2"
                             title={'Total'}
-                            amount={total + ' PLN'}
-                            change={0.116}
+                            amount={stats.total.toFixed(2) + ' PLN'}
+                            change={calculateChange(prevMonthStats.total, stats.total)}
+                            isLoading={transactions.isLoading || prevMonthTransactions.isLoading}
                         />
                     </div>
 
@@ -173,7 +270,7 @@ export default function Dashboard() {
                         <Card className="h-[490px] relative">
                             {transactions.isLoading ? (
                                 <div className="absolute inset-0 flex justify-center items-center">
-                                    <CircularProgress />
+                                    <CircularProgress color="inherit" />
                                 </div>
                             ) : (
                                 <Chart transactions={transactions.data} />
@@ -186,10 +283,14 @@ export default function Dashboard() {
                         <Card className="h-full relative">
                             {transactions.isLoading && (
                                 <div className="absolute inset-0 flex justify-center items-center">
-                                    <CircularProgress />
+                                    <CircularProgress color="inherit" />
                                 </div>
                             )}
-                            <TransactionList transactions={transactions.data} />
+                            <TransactionList
+                                transactions={transactions.data}
+                                accounts={accounts}
+                                selectedAccount={selectedAccount}
+                            />
                         </Card>
                     </div>
                 </div>

@@ -9,7 +9,6 @@ export default async function Home() {
     if ((await auth()).sessionClaims?.metadata.onboardingComplete === true) {
         onboarded = true;
     }
-    console.log(onboarded);
     return (
         <div className="flex flex-col gap-4 items-center justify-center h-[calc(100dvh-64px)]">
             <ProvidersBox providers={providers} />

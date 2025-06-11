@@ -16,7 +16,7 @@ export default function ProviderCard({ provider }) {
             )}
             onClick={async () => {
                 setIsLoading(true);
-                const url = await buildRequisitionLink(provider.id);
+                const url = await buildRequisitionLink(provider.id, provider.logo);
 
                 localStorage.setItem(
                     'bankData',

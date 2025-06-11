@@ -5,7 +5,18 @@ import { useMemo, useState } from 'react';
 type SortKey = 'amount' | 'description' | 'valueDate' | 'bookingDate';
 type SortDirection = 'asc' | 'desc';
 
-export function TransactionList({ transactions }: { transactions: ITransaction[] }) {
+export function TransactionList({
+    transactions,
+    accounts,
+    selectedAccount,
+}: {
+    transactions: ITransaction[];
+    accounts: {
+        id: number;
+        logo: string;
+    }[];
+    selectedAccount: string;
+}) {
     const [sortKey, setSortKey] = useState<SortKey>('bookingDate');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -117,7 +128,16 @@ export function TransactionList({ transactions }: { transactions: ITransaction[]
                             {transaction.remittanceInformationUnstructured?.toString()}
                         </div>
                         <div className="hidden md:block">{transaction.valueDate}</div>
-                        <div className="hidden md:block">{transaction.bookingDate}</div>
+                        <div className="hidden md:flex items-center gap-2">
+                            {transaction.bookingDate}
+                            {selectedAccount === 'all' && transaction.accountIndex !== undefined && (
+                                <img
+                                    src={accounts[transaction.accountIndex].logo}
+                                    about="bank logo"
+                                    className="size-4"
+                                />
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>

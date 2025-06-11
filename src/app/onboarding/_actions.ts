@@ -58,7 +58,7 @@ export async function fetchBankingProviders() {
     }
 }
 
-export async function buildRequisitionLink(institutionId: String) {
+export async function buildRequisitionLink(institutionId: string, bankIcon: string) {
     const { userId } = await auth();
 
     if (!userId) {
@@ -98,6 +98,7 @@ export async function buildRequisitionLink(institutionId: String) {
             await client.users.updateUserMetadata(userId, {
                 privateMetadata: {
                     requisitionId: requisitionData.id,
+                    bankIcon: bankIcon,
                 },
             });
         } catch (err) {
@@ -154,7 +155,10 @@ export async function finalizeSetup() {
                 },
                 privateMetadata: {
                     requisitionId: null,
-                    accounts: [...((user.privateMetadata.accounts as []) ?? []), ...requisitionData.accounts],
+                    accounts: [
+                        ...((user.privateMetadata.accounts as { account: string; logo: string }[]) ?? []),
+                        { account: requisitionData.accounts[0], logo: user.privateMetadata.bankIcon },
+                    ],
                 },
             });
         } catch (err) {

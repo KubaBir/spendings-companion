@@ -38,9 +38,10 @@ function getMonthStartAndEndDates(month: number, year: number) {
 export async function getTransactions(
     month: number,
     year: number,
-    accountIndex: number = 0
+    accountIndex: number | undefined,
+    isForced: boolean
 ): Promise<ITransaction[]> {
-    let transactions;
+    let transactions: ITransaction[] = [];
 
     const { userId } = await auth();
     if (!userId) {
@@ -50,21 +51,28 @@ export async function getTransactions(
     const client = await clerkClient();
     const user = await client.users.getUser(userId);
 
-    const accounts = (user.privateMetadata.accounts as unknown[]) || [];
+    const accounts = (user.privateMetadata.accounts as { account: string; logo: string }[]) || [];
     if (!accounts?.length) {
         throw new Error('Users account not found');
     }
 
     await dbConnect();
 
-    // TODO let the user choose account to update
-    const account = accounts[accountIndex] as string;
-    const monthlyReport = await findMonthlyReport({ year, month, account });
-    if (monthlyReport) {
-        transactions = monthlyReport.transactions;
+    if (accountIndex !== undefined) {
+        const account = accounts[accountIndex].account as string;
+        transactions = await getTransactionsForAccount({ year, month, account, isForced });
     } else {
-        transactions = await fetchTransactions({ account, month, year });
-        await updateMonthlyReport({ year, month, account, transactions });
+        await Promise.all(
+            (accounts as { account: string; logo: string }[]).map(async (account, index) => {
+                const t = await getTransactionsForAccount({
+                    year,
+                    month,
+                    account: account.account,
+                    isForced,
+                });
+                transactions = [...transactions, ...t.map((t) => ({ ...t, accountIndex: index }))];
+            })
+        );
     }
 
     transactions = transactions.map((transaction) => ({
@@ -79,6 +87,31 @@ export async function getTransactions(
     return transactions;
 }
 
+async function getTransactionsForAccount({
+    account,
+    year,
+    month,
+    isForced = false,
+}: {
+    month: number;
+    year: number;
+    account: string;
+    isForced: boolean;
+}) {
+    let transactions;
+    const monthlyReport = await findMonthlyReport({ year, month, account });
+    if (monthlyReport && !isForced) {
+        transactions = monthlyReport.transactions;
+    } else {
+        transactions = await fetchTransactions({ account, month, year });
+        await updateMonthlyReport({ year, month, account, transactions });
+    }
+
+    // console.log(transactions);
+
+    return transactions;
+}
+
 async function fetchTransactions({
     account,
     month,
@@ -88,7 +121,7 @@ async function fetchTransactions({
     month: number;
     year: number;
 }): Promise<ITransaction[]> {
-    console.log('Fetching transaction list');
+    console.log('Fetching transaction list', account, month, year);
     const dates = getMonthStartAndEndDates(month, year);
     const token = await getNordigenToken();
 
@@ -111,7 +144,19 @@ async function fetchTransactions({
 
     const transactionData = await transactionsResponse.json();
 
-    console.log(transactionData.transactions.booked[0]);
+    console.log(transactionData.transactions.booked);
 
     return transactionData.transactions.booked;
+}
+
+export async function getAccounts() {
+    const client = await clerkClient();
+    const { userId } = await auth();
+    if (!userId) {
+        throw new Error('User not logged in');
+    }
+    const user = await client.users.getUser(userId);
+    const accounts = (user.privateMetadata.accounts as { account: string; logo: string }[]) || [];
+
+    return accounts.map((a, index) => ({ id: index, logo: a.logo }));
 }

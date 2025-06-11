@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import Card from './card';
 import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
+import { CircularProgress } from '@mui/material';
 
 export default function StatCard({
     className,
@@ -8,24 +9,31 @@ export default function StatCard({
     amount,
     change,
     isInvertPositive = false,
+    isLoading,
 }: Readonly<{
     className?: string;
     title?: React.ReactNode;
     amount: string | number;
     change: number;
     isInvertPositive?: boolean;
+    isLoading: boolean;
 }>) {
     return (
         <Card title={title} className=" col-span-2">
-            <div className="text-2xl font-semibold">{amount}</div>
+            <div className="text-2xl font-semibold ">
+                {isLoading ? <CircularProgress size={30} color="inherit" /> : amount}
+            </div>
             <div
-                className={classNames(
-                    ' -ml-2 mt-auto flex items-center',
-                    change >= 0 && !isInvertPositive ? 'text-green-500' : 'text-red-500'
-                )}
+                className={classNames(' -ml-2 mt-auto flex items-center', {
+                    'text-white': change === 0,
+                    'text-green-500': change > 0 && !isInvertPositive,
+                    'text-red-500': change < 0 && !isInvertPositive,
+                    'text-green-500 ': change < 0 && isInvertPositive,
+                    'text-red-500 ': change > 0 && isInvertPositive,
+                })}
             >
                 {change >= 0 ? <ArrowDropUp /> : <ArrowDropDown />}
-                {Math.round(change * 10000) / 100}%
+                {change === 0 ? '?' : Math.round(change * 10000) / 100}%
             </div>
             <div className="text-sm font-thin opacity-40">Since last month</div>
         </Card>

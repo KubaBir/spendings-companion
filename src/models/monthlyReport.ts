@@ -45,8 +45,6 @@ export async function findMonthlyReport({
         .select({ 'transactions.internalTransactionId': 0, 'transactions._id': 0, _id: 0 })
         .lean();
 
-    console.log(data);
-
     return data;
 }
 

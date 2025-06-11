@@ -16,6 +16,7 @@ declare global {
         transactionAmount: { amount: number; currency: string };
         creditorName?: string;
         debtorName?: string;
+        accountIndex?: number;
     }
 
     export interface IMonthlyReport {
