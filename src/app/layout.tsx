@@ -6,6 +6,8 @@ import './globals.css';
 import { DotIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { CircularProgress } from '@mui/material';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -46,9 +48,17 @@ export default function RootLayout({
                             <UserButton appearance={{ baseTheme: dark }}></UserButton>
                         </SignedIn>
                     </header>
-                    {children}
+                    <Suspense fallback={<Loader />}>{children}</Suspense>
                 </body>
             </html>
         </ClerkProvider>
+    );
+}
+
+function Loader() {
+    return (
+        <div className="absolute inset-0 flex justify-center items-center text-white">
+            <CircularProgress color="inherit" />
+        </div>
     );
 }

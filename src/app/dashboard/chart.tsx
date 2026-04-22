@@ -60,7 +60,7 @@ export function Chart({ transactions }: { transactions: ITransaction[] }) {
             <div className="mb-auto flex justify-between items-center">
                 <Select onValueChange={handleValueChange} defaultValue="spending">
                     <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Select year" />
+                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="income">Income</SelectItem>
@@ -93,7 +93,7 @@ export function Chart({ transactions }: { transactions: ITransaction[] }) {
                 </div>
             </div>
             <ChartContainer config={chartConfig} className="min-h-0">
-                <BarChart accessibilityLayer data={chartValues.filter((v) => v[displayedItem] !== 0)}>
+                <BarChart data={chartValues.filter((v) => v[displayedItem] !== 0)}>
                     <CartesianGrid vertical={false} />
                     <XAxis dataKey="day" tickLine={false} tickMargin={10} axisLine={false} />
                     <ChartTooltip

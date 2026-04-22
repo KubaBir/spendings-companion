@@ -63,25 +63,26 @@ export async function getTransactions(
         transactions = await getTransactionsForAccount({ year, month, account, isForced });
     } else {
         await Promise.all(
-            (accounts as { account: string; logo: string }[]).map(async (account, index) => {
+            accounts.map(async (account, index) => {
                 const t = await getTransactionsForAccount({
                     year,
                     month,
                     account: account.account,
                     isForced,
                 });
-                transactions = [...transactions, ...t.map((t) => ({ ...t, accountIndex: index }))];
+                transactions = t.map((t) => ({ ...t, accountIndex: index }));
             })
         );
     }
 
-    transactions = transactions.map((transaction) => ({
+    transactions = transactions.map((transaction, index) => ({
         ...transaction,
         transactionAmount: {
-            // amount: Math.floor(Math.random() * (40 + 150 + 1)) - 150,
-            amount: Number(transaction.transactionAmount.amount),
+            amount: Math.floor(Math.random() * 191) - 150,
+            // amount: Number(transaction.transactionAmount.amount),
             currency: transaction.transactionAmount.currency,
         },
+        remittanceInformationUnstructured: 'Sample name ' + index,
     }));
 
     return transactions;

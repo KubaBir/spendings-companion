@@ -71,6 +71,7 @@ export default function Dashboard() {
     });
 
     const [accounts, setAccounts] = useState<{ id: number; logo: string }[]>([]);
+
     useEffect(() => {
         const fetch = async () => {
             const accounts = await getAccounts();
@@ -145,6 +146,7 @@ export default function Dashboard() {
     return (
         <div className="p-4 sm:p-10 !pt-0">
             <div className="max-w-[80em] mx-auto h-full flex flex-col">
+                {/* Header */}
                 <div className="md:flex gap-6 space-y-4 md:space-y-0 mb-14 items-center">
                     <h1 className="text-4xl font-extralight">Dashboard</h1>
                     <Select onValueChange={(val) => setSelectedAccount(val)} defaultValue={selectedAccount}>
@@ -211,7 +213,7 @@ export default function Dashboard() {
                             <TooltipTrigger asChild>
                                 <div
                                     className={cn(
-                                        'bg-primary p-1 rounded-md hover:saturate-[150%] shadow-md cursor-pointer',
+                                        'bg-primary p-1 w-[26px] flex rounded-md hover:saturate-[150%] shadow-md cursor-pointer',
                                         transactions.isLoading ||
                                             (prevMonthTransactions.isLoading && 'pointer-events-none')
                                     )}
@@ -231,14 +233,12 @@ export default function Dashboard() {
                     {/* Tiles */}
                     <div className="col-span-4 sm:grid sm:grid-cols-subgrid space-y-2 sm:space-y-0 sm:grid-rows-subgrid row-span-2">
                         <StatCard
-                            className="aspect-square col-span-2"
                             title={'Earned'}
                             amount={stats.earned.toFixed(2) + ' PLN'}
                             change={calculateChange(prevMonthStats.earned, stats.earned)}
                             isLoading={transactions.isLoading || prevMonthTransactions.isLoading}
                         />
                         <StatCard
-                            className="aspect-square col-span-2"
                             title={'Spent'}
                             amount={stats.spent.toFixed(2) + ' PLN'}
                             change={calculateChange(prevMonthStats.spent, stats.spent)}
@@ -246,7 +246,6 @@ export default function Dashboard() {
                             isInvertPositive
                         />
                         <StatCard
-                            className="aspect-square col-span-2"
                             title={'Transactions'}
                             amount={transactions.data.length}
                             change={calculateChange(
@@ -257,7 +256,6 @@ export default function Dashboard() {
                             isInvertPositive
                         />
                         <StatCard
-                            className="aspect-square col-span-2"
                             title={'Total'}
                             amount={stats.total.toFixed(2) + ' PLN'}
                             change={calculateChange(prevMonthStats.total, stats.total)}
@@ -265,7 +263,7 @@ export default function Dashboard() {
                         />
                     </div>
 
-                    {/* Graph */}
+                    {/* Chart */}
                     <div className="col-span-full lg:col-span-6 row-span-2 hidden lg:block">
                         <Card className="h-[490px] relative">
                             {transactions.isLoading ? (

@@ -22,7 +22,7 @@ export function TransactionList({
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
         } else {
             setSortKey(key);
             setSortDirection('asc');
@@ -132,7 +132,7 @@ export function TransactionList({
                             {transaction.bookingDate}
                             {selectedAccount === 'all' && transaction.accountIndex !== undefined && (
                                 <img
-                                    src={accounts[transaction.accountIndex].logo}
+                                    src={accounts[transaction.accountIndex]?.logo}
                                     about="bank logo"
                                     className="size-4"
                                 />

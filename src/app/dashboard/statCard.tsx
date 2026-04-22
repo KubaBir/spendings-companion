@@ -4,14 +4,12 @@ import { ArrowDropDown, ArrowDropUp } from '@mui/icons-material';
 import { CircularProgress } from '@mui/material';
 
 export default function StatCard({
-    className,
     title,
     amount,
     change,
     isInvertPositive = false,
     isLoading,
 }: Readonly<{
-    className?: string;
     title?: React.ReactNode;
     amount: string | number;
     change: number;
@@ -19,17 +17,22 @@ export default function StatCard({
     isLoading: boolean;
 }>) {
     return (
-        <Card title={title} className=" col-span-2">
+        <Card title={title} className="col-span-2">
             <div className="text-2xl font-semibold ">
                 {isLoading ? <CircularProgress size={30} color="inherit" /> : amount}
             </div>
             <div
-                className={classNames(' -ml-2 mt-auto flex items-center', {
+                className={classNames('-ml-2 mt-auto flex items-center', {
                     'text-white': change === 0,
-                    'text-green-500': change > 0 && !isInvertPositive,
-                    'text-red-500': change < 0 && !isInvertPositive,
-                    'text-green-500 ': change < 0 && isInvertPositive,
-                    'text-red-500 ': change > 0 && isInvertPositive,
+                    ...(isInvertPositive
+                        ? {
+                              'text-green-500': change < 0,
+                              'text-red-500': change > 0,
+                          }
+                        : {
+                              'text-green-500': change > 0,
+                              'text-red-500': change < 0,
+                          }),
                 })}
             >
                 {change >= 0 ? <ArrowDropUp /> : <ArrowDropDown />}

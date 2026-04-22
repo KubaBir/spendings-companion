@@ -1,6 +1,10 @@
 import ProviderCard from './ProviderCard';
 
-export default function ProvidersBox({ providers }) {
+export default function ProvidersBox({
+    providers,
+}: {
+    providers: { id: string; name: string; logo: string }[];
+}) {
     return (
         <div className="w-full max-w-md bg-gray-900 rounded-xl shadow-2xl p-6 border border-gray-800">
             <h2 className="text-xl font-bold text-white mb-6 text-center">Banking Providers</h2>

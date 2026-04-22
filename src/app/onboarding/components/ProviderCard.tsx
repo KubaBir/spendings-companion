@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { CircularProgress } from '@mui/material';
 import classNames from 'classnames';
 
-export default function ProviderCard({ provider }) {
+export default function ProviderCard({ provider }: { provider: { id: string; name: string; logo: string } }) {
     const [isLoading, setIsLoading] = useState(false);
     return (
         <div
